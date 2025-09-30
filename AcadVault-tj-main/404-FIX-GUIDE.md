@@ -1,224 +1,137 @@
-# 🚨 404 NOT_FOUND Fix Guide
+# 🚨 Next.js Version Detection Error Fix
 
-## Quick Diagnosis
-
-Your site is showing 404 errors. Here are the most common causes and fixes:
-
-## 🔧 Immediate Fixes
-
-### Fix 1: Vercel Deployment Issues
-
-If deployed on **Vercel**, create this file:
-
-**Create: `vercel.json`**
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ]
-}
+## ❌ Current Error
+```
+Warning: Could not identify Next.js version, ensure it is defined as a project dependency.
+Error: No Next.js version detected. Make sure your package.json has "next" in either "dependencies" or "devDependencies". Also check your Root Directory setting matches the directory of your package.json file.
 ```
 
-### Fix 2: Static Export Issues (Netlify/GitHub Pages)
+## ✅ Root Cause
+The deployment platform can't find your package.json or Next.js dependency due to **incorrect Root Directory setting**.
 
-If you need static export, update `next.config.mjs`:
+## 🔧 IMMEDIATE FIXES
 
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  distDir: 'out',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-}
+### Fix 1: Vercel - Root Directory Setting
 
-export default nextConfig
+1. **Go to your Vercel Dashboard**
+2. **Click on your project**
+3. **Go to Settings → General**
+4. **Find "Root Directory" setting**
+5. **Set it to:** `AcadVault-tj-main` (or leave blank if already correct)
+6. **Save and redeploy**
+
+### Fix 2: Netlify - Site Settings
+
+1. **Go to Netlify Dashboard**
+2. **Click Site Settings**
+3. **Go to Build & Deploy → Build Settings**
+4. **Set Base Directory to:** `AcadVault-tj-main`
+5. **Set Build Command to:** `npm run build`
+6. **Set Publish Directory to:** `.next`
+7. **Save and redeploy**
+
+### Fix 3: GitHub Repository Structure
+
+**If you have this structure:**
+```
+your-repo/
+  └── AcadVault-tj-main/
+      ├── package.json
+      ├── next.config.mjs
+      └── app/
 ```
 
-### Fix 3: Netlify Specific
+**The platform needs to know to look inside `AcadVault-tj-main/` folder!**
 
-**Create: `public/_redirects`**
-```
-/*    /index.html   200
-```
+## 🚀 Quick Fix for Any Platform
 
-**Create: `netlify.toml`**
-```toml
-[build]
-  command = "npm run build"
-  publish = "out"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-```
-
-### Fix 4: GitHub Pages
-
-**Create: `.github/workflows/deploy.yml`**
-```yaml
-name: Deploy Next.js to GitHub Pages
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-```
-
-## 🚀 Step-by-Step Fix
-
-### Step 1: Identify Your Platform
-Which platform did you deploy to?
-- [ ] Vercel
-- [ ] Netlify  
-- [ ] GitHub Pages
-- [ ] Railway
-- [ ] Other: ___________
-
-### Step 2: Apply Platform-Specific Fix
-
-**For Vercel:**
-1. Create `vercel.json` (see Fix 1 above)
-2. Redeploy
-
-**For Netlify:**
-1. Update `next.config.mjs` for static export (Fix 2)
-2. Create `public/_redirects` (Fix 3)
-3. Rebuild and redeploy
-
-**For GitHub Pages:**
-1. Update `next.config.mjs` for static export (Fix 2)
-2. Create GitHub Action (Fix 4)
-3. Push to trigger deployment
-
-### Step 3: Test Locally First
+### Option A: Move Files to Root (Recommended)
 
 ```bash
-# For static export
-npm run build
-npm run start
-
-# Check if these URLs work:
-# http://localhost:3000/
-# http://localhost:3000/auth/login
-# http://localhost:3000/student
+# Move all files from AcadVault-tj-main to root
+cd AcadVault-tj-main
+move * ../
+cd ..
+rmdir AcadVault-tj-main
 ```
 
-## 🔍 Common Issues & Solutions
+### Option B: Update Platform Settings
 
-### Issue: "404 - This page could not be found"
-**Solution:** App Router routing issue
-- Ensure all pages have `page.tsx` files
-- Check folder structure in `app/` directory
+Set **Root Directory** or **Base Directory** to: `AcadVault-tj-main`
 
-### Issue: Blank page or loading forever
-**Solution:** JavaScript/hydration issue
-- Check browser console for errors
-- Verify all imports are correct
+## 📁 File Structure Check
 
-### Issue: CSS not loading
-**Solution:** Static asset issue
-- Ensure Tailwind CSS is properly configured
-- Check `globals.css` is imported in layout.tsx
+Your package.json should be at one of these locations:
+- ✅ `your-repo/package.json` (if moved to root)
+- ✅ `your-repo/AcadVault-tj-main/package.json` (current structure)
 
-### Issue: Images not showing
-**Solution:** Image optimization issue
-- Already fixed with `unoptimized: true` in config
+## 🔍 Verification Steps
 
-## 🛠 Debug Steps
-
-1. **Check Browser Console**
-   - Open Developer Tools (F12)
-   - Look for JavaScript errors
-   - Check Network tab for failed requests
-
-2. **Verify Build Locally**
+1. **Check Repository Structure**
    ```bash
-   npm run build
-   npm run start
+   # Your repo should contain:
+   ├── package.json          ✅ Contains "next": "^14.2.33"
+   ├── next.config.mjs       ✅ Next.js config
+   ├── app/                  ✅ App router directory
+   └── vercel.json          ✅ Platform config
    ```
 
-3. **Check Deployment Logs**
-   - Look for build errors in platform dashboard
-   - Verify all files were uploaded correctly
+2. **Verify package.json has Next.js**
+   ```json
+   {
+     "dependencies": {
+       "next": "^14.2.33"    ✅ This line must exist
+     }
+   }
+   ```
 
-## 📞 Platform-Specific Help
+## � Platform-Specific Solutions
 
 ### Vercel
-- Check deployment logs at vercel.com/dashboard
-- Verify domain settings
-- Check function logs
+- ✅ Root Directory: `AcadVault-tj-main` or blank
+- ✅ Framework: Next.js (auto-detected)
+- ✅ Build Command: `npm run build`
 
-### Netlify
-- Check build logs in Netlify dashboard
-- Verify deploy settings
-- Check site settings > Build & deploy
+### Netlify  
+- ✅ Base Directory: `AcadVault-tj-main`
+- ✅ Build Command: `npm run build`
+- ✅ Publish Directory: `.next`
 
 ### GitHub Pages
-- Check Actions tab for deployment status
-- Verify Pages settings in repository
-- Ensure branch is set correctly
+- ✅ Workflow file looks in correct directory
+- ✅ Build process runs from package.json location
 
-## ✅ Quick Test
+## ⚡ FASTEST FIX
 
-After applying fixes, test these URLs:
-- [ ] Homepage: `your-domain.com/`
-- [ ] Login: `your-domain.com/auth/login`
-- [ ] Student: `your-domain.com/student`
-- [ ] Faculty: `your-domain.com/faculty`
+**1. Move to Repository Root** (5 minutes)
+```bash
+# Windows PowerShell
+cd "C:\Users\Dell\Desktop\AcadVault-frontend"
+Move-Item -Path "AcadVault-tj-main\*" -Destination "." -Force
+Remove-Item "AcadVault-tj-main" -Recurse
+```
+
+**2. Push to Git**
+```bash
+git add .
+git commit -m "Move project to repository root"
+git push
+```
+
+**3. Redeploy** - Platform will now find package.json at root!
+
+## ✅ Success Indicators
+
+After fix, you should see:
+- ✅ "Next.js 14.2.33 detected"
+- ✅ "Build successful"
+- ✅ No more version detection errors
 
 ## 🆘 Still Having Issues?
 
-If none of these fixes work:
+**Quick Debug:**
+1. Share your **exact repository structure**
+2. Share **platform settings screenshot**
+3. Share **build logs** from platform dashboard
 
-1. **Share Details:**
-   - Which platform you're using
-   - Exact error message
-   - Browser console errors
-   - Deployment logs
-
-2. **Temporary Workaround:**
-   - Deploy to Vercel (usually most reliable for Next.js)
-   - Use the exact configuration provided above
-
-**Most likely fix needed:** Create the appropriate config file for your platform and redeploy.
+**Most Common Issue:** Platform looking for package.json in wrong directory!
